@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clair
+spec:
+  replicas: {{ .Values.clair.replicaCount }}
+  selector:
+    matchLabels:
+      app: clair-clair
+  template:
+    metadata:
+      labels:
+        app: clair-clair
+    spec:
+      containers:
+      - name: clair
+        args:
+        - -log-level= {{ .Values.clair.logLevel }}
+        image: {{ .Values.clair.image }}
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /health
+            port: 6061
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+        ports:
+        - containerPort: 6060
+          name: clair-api
+          protocol: TCP
+        - containerPort: 6061
+          name: clair-health
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          httpGet:
+            path: /health
+            port: 6061
+            scheme: HTTP
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: {{ .Values.clair.resources.limits.cpu }}
+            memory: {{ .Values.clair.resources.limits.memory }}
+          requests:
+            cpu: {{ .Values.clair.resources.requests.cpu }}
+            memory: {{ .Values.clair.resources.requests.memory }}
+        volumeMounts:
+        - mountPath: /etc/clair
+          name: clair-config
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: clair-clair
+        name: clair-config
