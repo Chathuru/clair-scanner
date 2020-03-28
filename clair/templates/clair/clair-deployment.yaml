@@ -15,7 +15,7 @@ spec:
       containers:
       - name: clair
         args:
-        - -log-level= {{ .Values.clair.logLevel }}
+        - -log-level={{ .Values.clair.logLevel }}
         image: {{ .Values.clair.image }}
         livenessProbe:
           failureThreshold: 3
